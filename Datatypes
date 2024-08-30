@@ -1,0 +1,64 @@
+Data Type:
+What do data types have to do with hardware? Nothing, actually. People just wanted to write one more language that had data types in it. It's completely gratuitous; there's no point.
+But wait... hardware does have two kinds of drivers.
+
+(Drivers? What are those?)
+
+A driver is a data type which can drive a load. Basically, in a physical circuit, a driver would be anything that electrons can move through/into.
+Driver that can store a value (example: flip-flop).
+Driver that can not store value, but connects two points (example: wire).
+The first type of driver is called a reg in Verilog (short for "register"). The second data type is called a wire (for... well, "wire"). 
+You can refer to tidbits section to understand it better.
+There are lots of other data types - for instance, registers can be signed, unsigned, floating point... as a newbie, don't worry about them right now.
+
+Examples :
+
+wire and_gate_output; // "and_gate_output" is a wire that only outputs
+
+reg d_flip_flop_output; // "d_flip_flop_output" is a register; it stores and outputs a value
+
+reg [7:0] address_bus; // "address_bus" is a little-endian 8-bit register
+
+
+Summary:
+Wire data type is used for connecting two points.
+Reg data type is used for storing values.
+May god bless the rest of data types. You'll see them someday.
+
+Operators:
+Operators, thankfully, are the same things here as they are in other programming languages. They take two values and compare (or otherwise operate on) them to yield a third result - common examples are addition, equals, logical-and... To make life easier for us, nearly all operators (at least the ones in the list below) are exactly the same as their counterparts in the C programming language.
+
+      Operator Type          Operator Symbol    Operation Performed
+     Arithmetic                    *                Multiply
+                                   /                Division
+                                   +                Addition
+                                   -               subtraction
+                                   %                 Modulus
+      Logical                      !             Logical negation
+                                  &&               Logical and
+                                  ||               Logical or
+    Relational                     >              Greater than
+                                   <               Less than
+                                  >=           Greater than or equal
+                                  <=           Less than or equal
+  Equality                        ==               Equality
+                                  !=              inequality
+  Reduction                        ~           Bitwise negation
+                                  ~&                and
+                                   |                 or
+                                  ~|                nor
+                                  ^                 xor
+                                 ^~                xnor
+                                 ~^                xnor
+  Shift                          >>             Right shift
+                                 <<             Left shift
+  Concatenation                  { }           Concatenation
+  Conditional                     ?             conditional
+
+Example -
+a = b + c ; // That was very easy
+a = 1 << 5; // Hum let me think, ok shift '1' left by 5 positions.
+a = !b ; // Well does it invert b???
+a = ~b ; // How many times do you want to assign to 'a', it could cause multiple-drivers.
+Summary:
+Let's attend the C language training again, they're (almost) just like the C ones.
