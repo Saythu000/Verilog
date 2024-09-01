@@ -11,7 +11,7 @@ The first type of driver is called a reg in Verilog (short for "register"). The 
 You can refer to tidbits section to understand it better.
 There are lots of other data types - for instance, registers can be signed, unsigned, floating point... as a newbie, don't worry about them right now.
 
-Examples :
+Examples:
 
 wire and_gate_output; // "and_gate_output" is a wire that only outputs
 
