@@ -1,1 +1,19 @@
+Variables assignments:
 
+In digital there are two types of elements, combinational and sequential. Of course we know this. But the question is "How do we model this in Verilog ?". Well Verilog provides two ways to model the combinational logic and only one way to model sequential logic.
+
+-->Combinational elements can be modeled using assign and always statements.
+-->Sequential elements can be modeled using only always statement.
+-->There is a third block, which is used in test benches only: it is called Initial statement.
+
+inital block:
+An initial block, as the name suggests, is executed only once when simulation starts. This is useful in writing test benches. If we have multiple initial blocks, then all of them are executed at the beginning of simulation.
+example:
+initial begin
+  	  	clk = 0;
+  	  	reset = 0;
+  	  	req_0 = 0;
+  	  	req_1 = 0;
+end
+
+In the above example, at the beginning of simulation, (i.e. when time = 0), all the variables inside the begin and end block are driven zero.
