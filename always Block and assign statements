@@ -30,3 +30,13 @@ always  begin
   #5 clk = ~clk;
 end
 #5 in front of the statement delays its execution by 5 time units.
+
+Assign statement:
+An assign statement is used for modeling only combinational logic and it is executed continuously. So the assign statement is called 'continuous assignment statement' as there is no sensitive list.
+for example:
+assign out = (enable)?data : 1'bz;
+The above example is a tri-state buffer. When enable is 1, data is driven to out, else out is pulled to high-impedance. We can have nested conditional operators to construct mux, decoders and encoders.
+
+assign out = data;
+the above example is simple buffer.
+
