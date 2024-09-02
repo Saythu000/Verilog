@@ -1,1 +1,17 @@
+Task and Functions
 
+When repeating the same old things again and again, Verilog, like any other programming language, provides means to address repeated used code, these are called Tasks and Functions. I wish I had something similar for webpages, just call it to print this programming language stuff again and again.
+Code below is used for calculating even parity.
+function parity;
+input [31:0] data;
+integer i;
+begin
+  parity = 0;
+  for (i= 0; i < 32; i = i + 1) begin
+    parity = parity ^ data[i];
+  end
+end
+endfunction
+Functions and tasks have the same syntax; one difference is that tasks can have delays, whereas functions can not have any delay. This means that function can be used for modeling combinational logic.
+	
+A second difference is that functions can return a value, whereas tasks can not.
