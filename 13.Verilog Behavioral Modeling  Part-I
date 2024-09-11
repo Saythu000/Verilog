@@ -1,0 +1,297 @@
+Verilog HDL Abstraction Levels :
+Behavioral Models : Higher level of modeling where behavior of logic is modeled.
+RTL Models : Logic is modeled at register level
+Structural Models : Logic is modeled at both register level and gate level.
+
+
+Procedural Blocks :
+
+Verilog behavioral code is inside procedure blocks, but there is an exception: some behavioral code also exist outside procedure blocks. We can see this in detail as we make progress.
+
+There are two types of procedural blocks in Verilog:
+
+initial : initial blocks execute only once at time zero (start execution at time zero).
+always : always blocks loop to execute over and over again; in other words, as the name suggests, it executes always.   
+
+	Example - initial
+ module initial_example();
+reg clk,reset,enable,data;
+
+initial begin
+ clk = 0;
+ reset = 0;
+ enable = 0;
+ data = 0;
+end
+
+endmodule
+
+	
+In the above example, the initial block execution and always block execution starts at time 0. Always block waits for the event, here positive edge of clock, whereas initial block just executed all the statements within begin and end statement, without waiting.
+
+Example - always
+
+module always_example();
+reg clk,reset,enable,q_in,data;
+
+always @ (posedge clk)
+if (reset)  begin
+   data <= 0;
+end else if (enable) begin   
+   data <= q_in;
+end
+
+endmodule
+
+	
+In an always block, when the trigger event occurs, the code inside begin and end is executed; then once again the always block waits for next event triggering. This process of waiting and executing on event is repeated till simulation stops.
+
+Procedural Assignment Statements :
+Procedural assignment statements assign values to reg, integer, real, or time variables and can not assign values to nets (wire data types)
+You can assign to a register (reg data type) the value of a net (wire), constant, another register, or a specific value.
+
+Example - Bad procedural assignment
+module initial_bad();
+reg clk,reset;
+wire enable,data;
+
+initial begin
+ clk = 0;
+ reset = 0;
+ enable = 0;
+ data = 0;
+end
+
+	Example - Good procedural assignment
+
+ module initial_good();
+reg clk,reset,enable,data;
+
+initial begin
+ clk = 0;
+ reset = 0;
+ enable = 0;
+ data = 0;
+end
+
+endmodule
+
+	Procedural Assignment Groups :
+
+ 	
+If a procedure block contains more than one statement, those statements must be enclosed within
+
+Sequential begin - end block
+Parallel fork - join block
+
+When using begin-end, we can give name to that group. This is called named blocks.
+
+Example - "begin-end"
+module initial_begin_end();
+reg clk,reset,enable,data;
+
+initial begin
+ $monitor(
+   "%g clk=%b reset=%b enable=%b data=%b", 
+   $time, clk, reset, enable, data);
+ #1  clk = 0;
+ #10 reset = 0;
+ #5  enable = 0;
+ #3  data = 0;
+ #1 $finish;
+end
+
+endmodule
+
+Begin : clk gets 0 after 1 time unit, reset gets 0 after 11 time units, enable after 16 time units, data after 19 units. All the statements are executed sequentially.
+
+Output:
+ 0 clk=x reset=x enable=x data=x
+ 1 clk=0 reset=x enable=x data=x
+ 11 clk=0 reset=0 enable=x data=x
+ 16 clk=0 reset=0 enable=0 data=x
+ 19 clk=0 reset=0 enable=0 data=0
+
+ Example - "fork-join" :
+ module initial_fork_join();
+reg clk,reset,enable,data;
+
+initial begin
+ $monitor("%g clk=%b reset=%b enable=%b data=%b", 
+   $time, clk, reset, enable, data);
+ fork
+   #1  clk = 0;
+   #10 reset = 0;
+   #5  enable = 0;
+   #3  data = 0;
+ join
+ #1 $display ("%g Terminating simulation", $time);
+ $finish;
+end
+
+endmodule
+
+Fork : clk gets its value after 1 time unit, reset after 10 time units, enable after 5 time units, data after 3 time units. All the statements are executed in parallel.
+
+Output:
+ 0 clk=x reset=x enable=x data=x
+ 1 clk=0 reset=x enable=x data=x
+ 3 clk=0 reset=x enable=x data=0
+ 5 clk=0 reset=x enable=0 data=0
+ 10 clk=0 reset=0 enable=0 data=0
+ 11 Terminating simulation
+
+ Sequential Statement Groups :
+
+ The begin - end keywords
+
+Group several statements together.
+Cause the statements to be evaluated sequentially (one at a time)
+Any timing within the sequential groups is relative to the previous statement.
+Delays in the sequence accumulate (each delay is added to the previous delay)
+Block finishes after the last statement in the block.
+
+	Example - sequential :
+ module sequential();
+
+reg a;
+
+initial begin
+  $monitor ("%g a = %b", $time, a);
+  #10 a = 0;
+  #11 a = 1;
+  #12 a = 0;
+  #13 a = 1;
+  #14 $finish;
+end
+
+endmodule
+
+Output :
+ 0 a = x
+ 10 a = 0
+ 21 a = 1
+ 33 a = 0
+ 46 a = 1
+
+ Parallel Statement Groups :
+
+ The fork - join keywords:
+
+  Group several statements together.
+Cause the statements to be evaluated in parallel (all at the same time).
+Timing within parallel group is absolute to the beginning of the group.
+Block finishes after the last statement completes (Statement with highest delay, it can be the first statement in the block).
+
+Example :
+module parallel();
+
+reg a;
+
+initial 
+fork
+  $monitor ("%g a = %b", $time, a);
+  #10 a = 0;
+  #11 a = 1;
+  #12 a = 0;
+  #13 a = 1;
+  #14 $finish;
+join
+
+endmodule
+
+Output :
+ 0 a = x
+ 10 a = 0
+ 11 a = 1
+ 12 a = 0
+ 13 a = 1
+
+ Example - Mixing "begin-end" and "fork - join"
+
+ module fork_join();
+
+reg clk,reset,enable,data;
+
+initial  begin
+  $display ("Starting simulation");
+  $monitor("%g clk=%b reset=%b enable=%b data=%b", 
+    $time, clk, reset, enable, data);
+  fork : FORK_VAL
+    #1 clk = 0;
+    #5 reset = 0;
+    #5 enable = 0;
+    #2 data = 0;
+  join
+  #10 $display ("%g Terminating simulation", $time);
+  $finish;
+end
+
+endmodule
+
+Output :
+ 0 clk=x reset=x enable=x data=x
+ 1 clk=0 reset=x enable=x data=x
+ 2 clk=0 reset=x enable=x data=0
+ 5 clk=0 reset=0 enable=0 data=0
+ 15 Terminating simulation
+
+ Blocking and Nonblocking assignment :
+ 	
+Blocking assignments are executed in the order they are coded, hence they are sequential. Since they block the execution of next statment, till the current statement is executed, they are called blocking assignments. Assignment are made with "=" symbol. Example a = b;
+Nonblocking assignments are executed in parallel. Since the execution of next statement is not blocked due to execution of current statement, they are called nonblocking statement. Assignments are made with "<=" symbol. Example a <= b;
+
+Note : Correct way to spell 'nonblocking' is 'nonblocking' and not 'non-blocking'.
+
+Example - blocking and nonblocking :
+
+module blocking_nonblocking();
+
+reg a,b,c,d;
+// Blocking Assignment
+initial begin
+  #10 a = 0;
+  #11 a = 1;
+  #12 a = 0;
+  #13 a = 1;
+end
+//nonblocking
+initial begin
+  #10 b <= 0;
+  #11 b <= 1;
+  #12 b <= 0;
+  #13 b <= 1;
+end
+//Blocking
+initial begin
+   c = #10 0;
+   c = #11 1;
+   c = #12 0;
+   c = #13 1;
+end
+// Nonblocking
+initial begin
+   d <= #10 0;
+   d <= #11 1;
+   d <= #12 0;
+   d <= #13 1;
+end
+
+initial begin
+  $monitor("TIME = %g A = %b B = %b C = %b D = %b",$time, a, b, c, d);
+  #50 $finish;
+end
+
+endmodule
+
+Output:
+ TIME = 0 A = x B = x C = x D = x
+ TIME = 10 A = 0 B = 0 C = 0 D = 0
+ TIME = 11 A = 0 B = 0 C = 0 D = 1
+ TIME = 12 A = 0 B = 0 C = 0 D = 0
+ TIME = 13 A = 0 B = 0 C = 0 D = 1
+ TIME = 21 A = 1 B = 1 C = 1 D = 1
+ TIME = 33 A = 0 B = 0 C = 0 D = 1
+ TIME = 46 A = 1 B = 1 C = 1 D = 1
+
+ 
