@@ -1,0 +1,205 @@
+assign and deassign  :
+The assign and deassign procedural assignment statements allow continuous assignments to be placed onto registers for controlled periods of time. The assign procedural statement overrides procedural assignments to a register. The deassign procedural statement ends a continuous assignment to a register.
+
+Example :
+
+module assign_deassign ();
+
+reg clk,rst,d,preset;
+wire q;
+
+initial begin
+  $monitor("@%g clk %b rst %b preset %b d %b q %b", 
+    $time, clk, rst, preset, d, q);
+  clk = 0;
+  rst = 0;
+  d  = 0;
+  preset = 0;
+  #10 rst = 1;
+  #10 rst = 0;
+  repeat (10) begin
+    @ (posedge clk);
+    d <= $random;
+    @ (negedge clk) ;
+    preset <= ~preset;
+  end
+  #1 $finish;
+end
+// Clock generator
+always #1 clk = ~clk;
+
+// assign and deassign q of flip flop module
+always @(preset)
+if (preset) begin
+  assign U.q = 1; // assign procedural statement
+end else begin
+ deassign U.q;    // deassign procedural statement
+end
+
+d_ff U (clk,rst,d,q);
+
+endmodule
+
+// D Flip-Flop model
+module d_ff (clk,rst,d,q);
+input clk,rst,d;
+output q;
+reg q;
+
+always @ (posedge clk)
+if (rst) begin
+  q <= 0;
+end else begin
+  q <= d;
+end
+
+endmodule
+
+Output :
+
+ @0  clk 0 rst 0 preset 0 d 0 q x
+ @1  clk 1 rst 0 preset 0 d 0 q 0
+ @2  clk 0 rst 0 preset 0 d 0 q 0
+ @3  clk 1 rst 0 preset 0 d 0 q 0
+ @4  clk 0 rst 0 preset 0 d 0 q 0
+ @5  clk 1 rst 0 preset 0 d 0 q 0
+ @6  clk 0 rst 0 preset 0 d 0 q 0
+ @7  clk 1 rst 0 preset 0 d 0 q 0
+ @8  clk 0 rst 0 preset 0 d 0 q 0
+ @9  clk 1 rst 0 preset 0 d 0 q 0
+ @10 clk 0 rst 1 preset 0 d 0 q 0
+ @11 clk 1 rst 1 preset 0 d 0 q 0
+ @12 clk 0 rst 1 preset 0 d 0 q 0
+ @13 clk 1 rst 1 preset 0 d 0 q 0
+ @14 clk 0 rst 1 preset 0 d 0 q 0
+ @15 clk 1 rst 1 preset 0 d 0 q 0
+ @16 clk 0 rst 1 preset 0 d 0 q 0
+ @17 clk 1 rst 1 preset 0 d 0 q 0
+ @18 clk 0 rst 1 preset 0 d 0 q 0
+ @19 clk 1 rst 1 preset 0 d 0 q 0
+ @20 clk 0 rst 0 preset 0 d 0 q 0
+ @21 clk 1 rst 0 preset 0 d 0 q 0
+ @22 clk 0 rst 0 preset 1 d 0 q 1
+ @23 clk 1 rst 0 preset 1 d 1 q 1
+ @24 clk 0 rst 0 preset 0 d 1 q 1
+ @25 clk 1 rst 0 preset 0 d 1 q 1
+ @26 clk 0 rst 0 preset 1 d 1 q 1
+ @27 clk 1 rst 0 preset 1 d 1 q 1
+ @28 clk 0 rst 0 preset 0 d 1 q 1
+ @29 clk 1 rst 0 preset 0 d 1 q 1
+ @30 clk 0 rst 0 preset 1 d 1 q 1
+ @31 clk 1 rst 0 preset 1 d 1 q 1
+ @32 clk 0 rst 0 preset 0 d 1 q 1
+ @33 clk 1 rst 0 preset 0 d 1 q 1
+ @34 clk 0 rst 0 preset 1 d 1 q 1
+ @35 clk 1 rst 0 preset 1 d 0 q 1
+ @36 clk 0 rst 0 preset 0 d 0 q 1
+ @37 clk 1 rst 0 preset 0 d 1 q 0
+ @38 clk 0 rst 0 preset 1 d 1 q 1
+ @39 clk 1 rst 0 preset 1 d 1 q 1
+ @40 clk 0 rst 0 preset 0 d 1 q 1
+
+
+	force and release :
+Another form of procedural continuous assignment is provided by the force and release procedural statements. These statements have a similar effect on the assign-deassign pair, but a force can be applied to nets as well as to registers.
+One can use force and release while doing gate level simulation to work around reset connectivity problems. Also can be used insert single and double bit errors on data read from memory.
+
+	Example - force and release
+module force_release ();
+
+reg clk,rst,d,preset;
+wire q;
+
+initial begin
+  $monitor("@%g clk %b rst %b preset %b d %b q %b", 
+    $time, clk, rst, preset, d, q);
+  clk = 0;
+  rst = 0;
+  d  = 0;
+  preset = 0;
+  #10 rst = 1;
+  #10 rst = 0;
+  repeat (10) begin
+    @ (posedge clk);
+    d <= $random;
+    @ (negedge clk) ;
+    preset <= ~preset;
+  end
+  #1 $finish;
+end
+// Clock generator
+always #1 clk = ~clk;
+
+// force and release of flip flop module
+always @(preset)
+if (preset) begin
+  force U.q = preset; // force procedural statement
+end else begin
+  release U.q;    // release procedural statement
+end
+
+d_ff U (clk,rst,d,q);
+
+endmodule
+
+// D Flip-Flop model
+module d_ff (clk,rst,d,q);
+input clk,rst,d;
+output q;
+wire q;
+reg q_reg;
+
+assign q = q_reg;
+
+always @ (posedge clk)
+if (rst) begin
+  q_reg <= 0;
+end else begin
+  q_reg <= d;
+end
+
+endmodule
+
+
+Output :
+ @0  clk 0 rst 0 preset 0 d 0 q x
+ @1  clk 1 rst 0 preset 0 d 0 q 0
+ @2  clk 0 rst 0 preset 0 d 0 q 0
+ @3  clk 1 rst 0 preset 0 d 0 q 0
+ @4  clk 0 rst 0 preset 0 d 0 q 0
+ @5  clk 1 rst 0 preset 0 d 0 q 0
+ @6  clk 0 rst 0 preset 0 d 0 q 0
+ @7  clk 1 rst 0 preset 0 d 0 q 0
+ @8  clk 0 rst 0 preset 0 d 0 q 0
+ @9  clk 1 rst 0 preset 0 d 0 q 0
+ @10 clk 0 rst 1 preset 0 d 0 q 0
+ @11 clk 1 rst 1 preset 0 d 0 q 0
+ @12 clk 0 rst 1 preset 0 d 0 q 0
+ @13 clk 1 rst 1 preset 0 d 0 q 0
+ @14 clk 0 rst 1 preset 0 d 0 q 0
+ @15 clk 1 rst 1 preset 0 d 0 q 0
+ @16 clk 0 rst 1 preset 0 d 0 q 0
+ @17 clk 1 rst 1 preset 0 d 0 q 0
+ @18 clk 0 rst 1 preset 0 d 0 q 0
+ @19 clk 1 rst 1 preset 0 d 0 q 0
+ @20 clk 0 rst 0 preset 0 d 0 q 0
+ @21 clk 1 rst 0 preset 0 d 0 q 0
+ @22 clk 0 rst 0 preset 1 d 0 q 1
+ @23 clk 1 rst 0 preset 1 d 1 q 1
+ @24 clk 0 rst 0 preset 0 d 1 q 0
+ @25 clk 1 rst 0 preset 0 d 1 q 1
+ @26 clk 0 rst 0 preset 1 d 1 q 1
+ @27 clk 1 rst 0 preset 1 d 1 q 1
+ @28 clk 0 rst 0 preset 0 d 1 q 1
+ @29 clk 1 rst 0 preset 0 d 1 q 1
+ @30 clk 0 rst 0 preset 1 d 1 q 1
+ @31 clk 1 rst 0 preset 1 d 1 q 1
+ @32 clk 0 rst 0 preset 0 d 1 q 1
+ @33 clk 1 rst 0 preset 0 d 1 q 1
+ @34 clk 0 rst 0 preset 1 d 1 q 1
+ @35 clk 1 rst 0 preset 1 d 0 q 1
+ @36 clk 0 rst 0 preset 0 d 0 q 1
+ @37 clk 1 rst 0 preset 0 d 1 q 0
+ @38 clk 0 rst 0 preset 1 d 1 q 1
+ @39 clk 1 rst 0 preset 1 d 1 q 1
+ @40 clk 0 rst 0 preset 0 d 1 q 1
