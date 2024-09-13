@@ -1,0 +1,28 @@
+	Procedural Block Control
+Procedural blocks become active at simulation time zero. Use level sensitive event controls to control the execution of a procedure.
+
+module dlatch_using_always();
+
+reg q;
+reg enable,d;
+
+always(d or enable) begin
+if(enable) begin
+q = d;
+end
+end
+initial begin
+$monitor($time,"enable = %b data = %b q = %b",enable,d,q);
+#10 enable =0; 
+#10 d = 1;
+#10 enable = 1; 
+#10 d= 0;
+#10 d = 1;
+#10 d = 0;
+#10 enable = 0;
+#10 $finish();
+end
+endmodule
+
+	
+Any change in either d or enable satisfies the event control and allows the execution of the statements in the procedure. The procedure is sensitive to any change in d or enable.
