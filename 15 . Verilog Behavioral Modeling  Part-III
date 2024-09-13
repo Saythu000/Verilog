@@ -1,0 +1,137 @@
+	Looping Statements : 	
+Looping statements appear inside procedural blocks only; Verilog has four looping statements like any other programming language.
+
+forever
+repeat
+while
+for
+
+The forever statement :
+	
+The forever loop executes continually, the loop never ends. Normally we use forever statements in initial blocks.
+
+syntax: forever < statement >
+
+One should be very careful when using a forever statement: if no timing construct is present in the forever statement, the simulation could hang. The code below is one such application, where a timing construct is included inside a forever statement.
+
+Example - Free running clock generator :
+module forever_example ();
+
+reg clk;
+
+initial begin
+  #1 clk = 0; 
+  forever begin
+    #5 clk = !clk; 
+  end
+end 
+
+initial begin
+  $monitor ("Time = %d  clk = %b",$time, clk);
+  #100 $finish;
+end
+
+endmodule
+
+The repeat statement :
+	
+The repeat loop executes < statement > a fixed < number > of times
+
+syntax : repeat (< number >) < statement >
+
+	Example- repeat :
+ module repeat_example();
+reg  [3:0] opcode;
+reg  [15:0] data;
+reg        temp;
+
+always @ (opcode or data)
+begin
+  if (opcode == 10) begin
+    // Perform rotate
+    repeat (8) begin 
+      #1 temp = data[15];
+      data = data << 1;
+      data[0] = temp;   
+    end 
+  end
+end
+// Simple test code
+initial begin
+   $display (" TEMP  DATA");
+   $monitor (" %b     %b ",temp, data);
+   #1 data = 18'hF0;
+   #1 opcode = 10;
+   #10 opcode = 0;
+   #1 $finish;
+end
+
+endmodule
+
+The while loop statement :
+	
+The while loop executes as long as an < expression > evaluates as true. This is the same as in any other programming language.
+syntax : while (< expression >) < statement >
+
+Example :
+
+module while_example();
+
+reg [5:0] loc;
+reg [7:0] data;
+
+always @ (data or loc)
+begin
+  loc = 0;
+  // If Data is 0, then loc is 32 (invalid value)
+  if (data == 0) begin
+    loc = 32;
+  end else begin
+    while (data[0] == 0) begin
+      loc = loc + 1;
+      data = data >> 1;
+    end
+  end 
+  $display ("DATA = %b   LOCATION = %d",data,loc);
+end
+
+initial begin
+  #1 data = 8'b11;
+  #1 data = 8'b100;
+  #1 data = 8'b1000;
+  #1 data = 8'b1000_0000;
+  #1 data = 8'b0;
+  #1 $finish;
+end
+
+endmodule
+
+The for loop statement :
+	
+The for loop is the same as the for loop used in any other programming language.
+Executes an < initial assignment > once at the start of the loop.
+Executes the loop as long as an < expression > evaluates as true.
+Executes a < step assignment > at the end of each pass through the loop.
+
+	
+syntax : for (< initial assignment >; < expression >, < step assignment >) < statement >
+
+Note : verilog does not have ++ operator as in the case of C language.
+
+Example - For :
+module for_example();
+
+integer i;
+reg [7:0] ram [0:255];
+
+initial begin
+  for (i = 0; i < 256; i = i + 1) begin
+    #1 $display(" Address = %g  Data = %h",i,ram[i]);
+    ram[i] <= 0; // Initialize the RAM with 0
+    #1 $display(" Address = %g  Data = %h",i,ram[i]);
+  end
+  #1 $finish;
+end
+
+endmodule
+
