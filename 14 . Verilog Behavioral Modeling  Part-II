@@ -1,0 +1,429 @@
+The Conditional Statement if-else:
+The if - else statement controls the execution of other statements. In programming language like c, if - else controls the flow of program. When more than one statement needs to be executed for an if condition, then we need to use begin and end as seen in earlier examples.
+
+Syntax : if
+
+if (condition)
+
+statements;
+
+ 	 	
+	
+Syntax : if-else
+
+if (condition)
+
+statements;
+
+else
+
+statements;
+
+
+	
+Syntax : nested if-else-if
+
+if (condition)
+
+statements;
+
+else if (condition)
+
+statements;
+
+................
+
+................
+
+else
+
+statements;
+
+
+	Example- simple if :
+ 
+ module simple_if();
+
+reg latch;
+wire enable,din;
+
+always @ (enable or din)
+if (enable) begin
+  latch <= din;
+end  
+
+endmodule
+
+	Example- if-else :
+ 
+ module if_else();
+
+reg dff;
+wire clk,din,reset;
+
+always @ (posedge clk)
+if (reset) begin
+  dff <= 0;
+end else  begin
+  dff <= din;
+end
+
+endmodule
+
+	Example- nested-if-else-if :
+
+ module nested_if();
+
+reg [3:0] counter;
+reg clk,reset,enable, up_en, down_en;
+
+always @ (posedge clk)
+// If reset is asserted
+if (reset == 1'b0) begin
+   counter <= 4'b0000; 
+// If counter is enable and up count is asserted
+end else if (enable == 1'b1 && up_en == 1'b1) begin
+   counter <= counter + 1'b1;
+// If counter is enable and down count is asserted
+end else if (enable == 1'b1 && down_en == 1'b1) begin
+   counter <= counter - 1'b1;
+// If counting is disabled
+end else begin
+   counter <= counter; // Redundant code 
+end
+
+// Testbench code 
+initial begin
+  $monitor ("@%0dns reset=%b enable=%b up=%b down=%b count=%b",
+             $time, reset, enable, up_en, down_en,counter);
+  $display("@%0dns Driving all inputs to know state",$time);
+  clk = 0;
+  reset = 0;
+  enable = 0;
+  up_en = 0;
+  down_en = 0;
+  #3 reset = 1;
+  $display("@%0dns De-Asserting reset",$time);
+  #4 enable = 1;
+  $display("@%0dns De-Asserting reset",$time);
+  #4 up_en = 1;
+  $display("@%0dns Putting counter in up count mode",$time);
+  #10 up_en = 0;
+  down_en = 1;
+  $display("@%0dns Putting counter in down count mode",$time);
+  #8 $finish;
+end
+
+always #1 clk = ~clk;
+
+endmodule
+
+Simulation Log- nested-if-else-if
+
+	
+ @0ns Driving all inputs to know state
+ @0ns reset=0 enable=0 up=0 down=0 count=xxxx
+ @1ns reset=0 enable=0 up=0 down=0 count=0000
+ @3ns De-Asserting reset
+ @3ns reset=1 enable=0 up=0 down=0 count=0000
+ @7ns De-Asserting reset
+ @7ns reset=1 enable=1 up=0 down=0 count=0000
+ @11ns Putting counter in up count mode
+ @11ns reset=1 enable=1 up=1 down=0 count=0001
+ @13ns reset=1 enable=1 up=1 down=0 count=0010
+ @15ns reset=1 enable=1 up=1 down=0 count=0011
+ @17ns reset=1 enable=1 up=1 down=0 count=0100
+ @19ns reset=1 enable=1 up=1 down=0 count=0101
+ @21ns Putting counter in down count mode
+ @21ns reset=1 enable=1 up=0 down=1 count=0100
+ @23ns reset=1 enable=1 up=0 down=1 count=0011
+ @25ns reset=1 enable=1 up=0 down=1 count=0010
+ @27ns reset=1 enable=1 up=0 down=1 count=0001
+
+ 	Parallel if-else :
+  	
+In the above example, the (enable == 1'b1 && up_en == 1'b1) is given highest priority and condition (enable == 1'b1 && down_en == 1'b1) is given lowest priority. We normally don't include reset checking in priority as this does not fall in the combo logic input to the flip-flop.
+
+So when we need priority logic, we use nested if-else statements. On the other hand if we don't want to implement priority logic, knowing that only one input is active at a time (i.e. all inputs are mutually exclusive), then we can write the code as shown below.
+
+	
+It's known fact that priority implementation takes more logic to implement than parallel implementation. So if you know the inputs are mutually exclusive, then you can code the logic in parallel if.
+
+module parallel_if();
+
+reg [3:0] counter;
+wire clk,reset,enable, up_en, down_en;
+
+always @ (posedge clk)
+// If reset is asserted
+if (reset == 1'b0) begin
+   counter <= 4'b0000; 
+end else begin
+  // If counter is enable and up count is mode
+  if (enable == 1'b1 && up_en == 1'b1) begin
+    counter <= counter + 1'b1;
+  end
+  // If counter is enable and down count is mode
+  if (enable == 1'b1 && down_en == 1'b1) begin
+    counter <= counter - 1'b1;
+  end 
+end  
+
+endmodule
+
+	The Case Statement :
+ 	
+The case statement compares an expression to a series of cases and executes the statement or statement group associated with the first matching case:
+case statement supports single or multiple statements.
+Group multiple statements using begin and end keywords.
+
+Syntax of a case statement look as shown below.
+
+case ()
+
+< case1 > : < statement >
+
+< case2 > : < statement >
+
+.....
+
+default : < statement >
+
+endcase
+
+
+	Normal Case :
+ Example- case:
+
+ module mux (a,b,c,d,sel,y); 
+input a, b, c, d; 
+input [1:0] sel; 
+output y; 
+
+reg y;
+
+always @ (a or b or c or d or sel) 
+case (sel) 
+  0 : y = a; 
+  1 : y = b; 
+  2 : y = c; 
+  3 : y = d; 
+  default : $display("Error in SEL"); 
+endcase 
+    
+endmodule
+
+	Example- case without default:
+ 
+ module mux_without_default (a,b,c,d,sel,y);
+input a, b, c, d; 
+input [1:0] sel; 
+output y; 
+
+reg y;
+
+always @ (a or b or c or d or sel) 
+case (sel) 
+  0 : y = a; 
+  1 : y = b; 
+  2 : y = c; 
+  3 : y = d; 
+  2'bxx,2'bx0,2'bx1,2'b0x,2'b1x,
+  2'bzz,2'bz0,2'bz1,2'b0z,2'b1z : $display("Error in SEL");
+endcase 
+
+endmodule
+
+	
+The example above shows how to specify multiple case items as a single case item.
+
+The Verilog case statement does an identity comparison (like the === operator); one can use the case statement to check for logic x and z values as shown in the example below.
+
+Example- case with x and z :
+ module case_xz(enable);
+input enable;
+
+always @ (enable)
+case(enable)
+  1'bz : $display ("enable is floating"); 
+  1'bx : $display ("enable is unknown"); 
+  default : $display ("enable is %b",enable); 
+endcase 
+
+endmodule
+
+The casez and casex statement :
+
+Special versions of the case statement allow the x ad z logic values to be used as "don't care":
+casez : Treats z as don't care.
+casex : Treats x and z as don't care.
+
+	Example- cases :
+ module casez_example();
+reg [3:0] opcode;
+reg [1:0] a,b,c;
+reg [1:0] out;
+
+always @ (opcode or a or b or c)
+casez(opcode)
+  4'b1zzx : begin // Don't care about lower 2:1 bit, bit 0 match with x
+              out = a; 
+              $display("@%0dns 4'b1zzx is selected, opcode %b",$time,opcode);
+            end
+  4'b01?? : begin
+              out = b; // bit 1:0 is don't care
+              $display("@%0dns 4'b01?? is selected, opcode %b",$time,opcode);
+            end
+  4'b001? : begin  // bit 0 is don't care
+              out = c;
+              $display("@%0dns 4'b001? is selected, opcode %b",$time,opcode);
+            end
+  default : begin
+              $display("@%0dns default is selected, opcode %b",$time,opcode);
+            end
+endcase
+
+// Testbench code goes here
+always #2 a = $random;
+always #2 b = $random;
+always #2 c = $random;
+
+initial begin
+  opcode = 0;
+  #2 opcode = 4'b101x;
+  #2 opcode = 4'b0101;
+  #2 opcode = 4'b0010;
+  #2 opcode = 4'b0000;
+  #2 $finish;
+end
+
+endmodule
+
+Simulation Output - cases :
+	
+ @0ns default is selected, opcode 0000
+ @2ns 4'b1zzx is selected, opcode 101x
+ @4ns 4'b01?? is selected, opcode 0101
+ @6ns 4'b001? is selected, opcode 0010
+ @8ns default is selected, opcode 0000
+
+ Example- cases :
+ module casex_example();
+reg [3:0] opcode;
+reg [1:0] a,b,c;
+reg [1:0] out;
+
+always @ (opcode or a or b or c)
+casex(opcode)
+  4'b1zzx : begin // Don't care  2:0 bits
+              out = a; 
+              $display("@%0dns 4'b1zzx is selected, opcode %b",$time,opcode);
+            end
+  4'b01?? : begin // bit 1:0 is don't care
+              out = b; 
+              $display("@%0dns 4'b01?? is selected, opcode %b",$time,opcode);
+            end
+  4'b001? : begin // bit 0 is don't care
+              out = c;
+              $display("@%0dns 4'b001? is selected, opcode %b",$time,opcode);
+            end
+  default : begin
+              $display("@%0dns default is selected, opcode %b",$time,opcode);
+            end
+endcase 
+
+// Testbench code goes here
+always #2 a = $random;
+always #2 b = $random;
+always #2 c = $random;
+
+initial begin
+  opcode = 0;
+  #2 opcode = 4'b101x;
+  #2 opcode = 4'b0101;
+  #2 opcode = 4'b0010;
+  #2 opcode = 4'b0000;
+  #2 $finish;
+end
+
+endmodule
+
+Output :
+ @0ns default is selected, opcode 0000
+ @2ns 4'b1zzx is selected, opcode 101x
+ @4ns 4'b01?? is selected, opcode 0101
+ @6ns 4'b001? is selected, opcode 0010
+ @8ns default is selected, opcode 0000
+
+ Example- Comparing case, casex, cases :
+ module case_compare;
+
+reg sel;
+
+initial begin
+  #1 $display ("\n     Driving 0");
+  sel = 0;
+  #1 $display ("\n     Driving 1");
+  sel = 1;
+  #1 $display ("\n     Driving x");
+  sel = 1'bx;
+  #1 $display ("\n     Driving z");
+  sel = 1'bz;
+  #1 $finish;
+end
+
+always @ (sel)
+case (sel)
+  1'b0 : $display("Normal : Logic 0 on sel");
+  1'b1 : $display("Normal : Logic 1 on sel");
+  1'bx : $display("Normal : Logic x on sel");
+  1'bz : $display("Normal : Logic z on sel");
+endcase
+
+always @ (sel)
+casex (sel)
+  1'b0 : $display("CASEX  : Logic 0 on sel");
+  1'b1 : $display("CASEX  : Logic 1 on sel");
+  1'bx : $display("CASEX  : Logic x on sel");
+  1'bz : $display("CASEX  : Logic z on sel");
+endcase
+
+always @ (sel)
+casez (sel)
+  1'b0 : $display("CASEZ  : Logic 0 on sel");
+  1'b1 : $display("CASEZ  : Logic 1 on sel");
+  1'bx : $display("CASEZ  : Logic x on sel");
+  1'bz : $display("CASEZ  : Logic z on sel");
+endcase
+
+endmodule
+
+	
+Simulation Output:
+      Driving 0
+ Normal : Logic 0 on sel
+ CASEX  : Logic 0 on sel
+ CASEZ  : Logic 0 on sel
+ 
+      Driving 1
+ Normal : Logic 1 on sel
+ CASEX  : Logic 1 on sel
+ CASEZ  : Logic 1 on sel
+ 
+      Driving x
+ Normal : Logic x on sel
+ CASEX  : Logic 0 on sel
+ CASEZ  : Logic x on sel
+ 
+      Driving z
+ Normal : Logic z on sel
+ CASEX  : Logic 0 on sel
+ CASEZ  : Logic 0 on sel
+
+ 
+ 	 	
+
+
+
+
+
