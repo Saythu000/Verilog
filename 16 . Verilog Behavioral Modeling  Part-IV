@@ -1,0 +1,67 @@
+Continuous Assignment Statements :
+Continuous assignment statements drive nets (wire data type). They represent structural connections.
+
+They are used for modeling Tri-State buffers.
+They can be used for modeling combinational logic.
+They are outside the procedural blocks (always and initial blocks).
+The continuous assign overrides any procedural assignments.
+The left-hand side of a continuous assignment must be net data type.
+syntax : assign (strength, strength) #(delay) net = expression;
+
+Example - One bit Adder
+
+module adder_using_assign();
+reg a,b;
+wire [0:1] sum,carry;
+assign #5 {carry,sum} = a+b;
+
+initial begin
+$monitor("A = %b  B = %b CARRY = %b SUM = %b",a,b,carry,sum);
+#10 a = 0; b = 0;
+#10 a=1;
+#10 b = 1;
+#10 a = 0;
+#10 b = 0;
+#10 $finish();
+end
+endmodule
+
+
+Example - Tri-state buffer  :
+module tri-buf_using_assign();
+reg data_in,enable;
+wire pad;
+
+assign #5 pad = enable ? data_in :1'bz;
+
+initial begin
+$monitor("TIME = %g ENABLE = %b DATA : %b PAD %b", $time, enable, data_in, pad);
+#1  enable = 0;
+#1 data_in = 1;
+#1  enable = 1;
+#1 data_in = 0;
+#1 enable = 0;
+#1 $finish();
+end
+endmodule
+
+Propagation Delay :
+Continuous Assignments may have a delay specified; only one delay for all transitions may be specified. A minimum:typical: maximum delay range may be specified.
+
+Example - Tri-state buffer  :
+module tri-buf_using_assign();
+reg data_in,enable;
+wire pad;
+
+assign #(1:2:3) pad = enable ? data_in :1'bz;
+
+initial begin
+$monitor("TIME = %g ENABLE = %b DATA : %b PAD %b", $time, enable, data_in, pad);
+#1  enable = 0;
+#1 data_in = 1;
+#1  enable = 1;
+#1 data_in = 0;
+#1 enable = 0;
+#1 $finish();
+end
+endmodule
