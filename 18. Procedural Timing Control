@@ -57,3 +57,220 @@ Delays execution of the next statement until the specified transition on a signa
 
 syntax : @ (< posedge >|< negedge > signal) < statement >;
 
+Example for Edge wait :
+
+module edge_wait();
+
+reg clk,enable,trigger;
+
+always @(posedge enable) begin
+trigger = 0;
+
+repeat (5) begin
+ @(posedge clk);
+end
+trigger = 1;
+end
+
+initial begin
+$monitor("Time = %g clk = %g enable =%b trigger = %b",$time,clk,enable,trigger);
+clk = 0;
+enable = 0;
+
+#5 enable = 1;
+#1 enable = 0;
+#10 enable = 1;
+#1 enable = 0;
+#10 $finish();
+end
+always #1 clk = ~clk;
+endmodule
+
+Output :
+
+Time = 0 clk = 0 enable =0 trigger = x
+Time = 1 clk = 1 enable =0 trigger = x
+Time = 2 clk = 0 enable =0 trigger = x
+Time = 3 clk = 1 enable =0 trigger = x
+Time = 4 clk = 0 enable =0 trigger = x
+Time = 5 clk = 1 enable =1 trigger = 0
+Time = 6 clk = 0 enable =0 trigger = 0
+Time = 7 clk = 1 enable =0 trigger = 0
+Time = 8 clk = 0 enable =0 trigger = 0
+Time = 9 clk = 1 enable =0 trigger = 0
+Time = 10 clk = 0 enable =0 trigger = 0
+Time = 11 clk = 1 enable =0 trigger = 0
+Time = 12 clk = 0 enable =0 trigger = 0
+Time = 13 clk = 1 enable =0 trigger = 0
+Time = 14 clk = 0 enable =0 trigger = 0
+Time = 15 clk = 1 enable =0 trigger = 1
+Time = 16 clk = 0 enable =1 trigger = 0
+Time = 17 clk = 1 enable =0 trigger = 0
+Time = 18 clk = 0 enable =0 trigger = 0
+Time = 19 clk = 1 enable =0 trigger = 0
+Time = 20 clk = 0 enable =0 trigger = 0
+Time = 21 clk = 1 enable =0 trigger = 0
+Time = 22 clk = 0 enable =0 trigger = 0
+Time = 23 clk = 1 enable =0 trigger = 0
+Time = 24 clk = 0 enable =0 trigger = 0
+Time = 25 clk = 1 enable =0 trigger = 1
+Time = 26 clk = 0 enable =0 trigger = 1
+
+Level-Sensitive Even Controls ( Wait statements ) :
+
+Delays execution of the next statement until < expression > evaluates to true
+
+syntax : wait (< expression >) < statement >;
+
+	Example - Level Wait :
+
+module wait_example();
+
+reg mem_read. data_ready;
+reg [7:0] data_bus, data;
+
+always @(mem_read or data_bus or data_ready)
+begin
+data = 0;
+while(mem_read == 1'b1)begin
+wait(data_ready == 1) #1 data = data_bus;
+end
+end
+
+initial 
+begin
+$monitor("Time = %g read = %b ready = %b data = %b", $time,mem_read,data_ready,data);
+
+data_bus = 0;
+mem_read = 0;
+data_ready =0;
+ #10 data_bus = 8'hDE;
+#10 mem_read = 1;
+#20 data_ready = 1;
+#1 mem_read = 1;
+#1 data_ready = 1;
+#10 data_bus = 8'hAD;
+#10 mem_read = 1;
+#20 data_ready = 1;
+#1 mem_read = 1;
+#1 data_ready = 0;
+#10 $finish();
+end
+
+endmodule
+
+Output:
+Time = 0 read = 0 ready = 0 data = 00000000
+Time = 20 read = 1 ready = 0 data = 00000000
+Time = 40 read = 1 ready = 1 data = 00000000
+Time = 41 read = 1 ready = 1 data = 11011110
+Time = 52 read = 1 ready = 1 data = 10101101
+Time = 84 read = 1 ready = 0 data = 10101101
+
+	Intra-Assignment Timing Controls :
+	
+Intra-assignment controls always evaluate the right side expression immediately and assign the result after the delay or event control.
+	
+In non-intra-assignment controls (delay or event control on the left side), the right side expression is evaluated after the delay or event control.
+
+Example - Intra Assignment :
+module intra_assign();
+reg a,b;
+
+initial begin
+$monitor("time = %g a = %b b= %b",$time,a,b);
+a = 1;
+b = 0;
+a = #10 0;
+b = a;
+#20 $display("time = %g a = %b b = %b",$time,a,b);
+$finish(;
+end
+endmodule
+
+Output :
+TIME = 0   A = 1  B = 0
+ TIME = 10  A = 0  B = 0
+ TIME = 30  A = 0  B = 0
+
+Modeling Combo Logic with Continuous Assignments :
+
+Whenever any signal changes on the right hand side, the entire right-hand side is re-evaluated and the result is assigned to the left hand side.
+
+Example - Tri-state Buffer 
+
+module tri_buf_using();
+reg data_in,enable;
+wire pad;
+
+assign pad = (enable)?data_in : 1'bz;
+
+initial begin
+$monitor("time = %g enable = %b data:%b pad:%b",$time,enable,data_in,pad);
+#1 enable = 0;
+#1 data_in = 1;
+#1 enable = 1;
+#1 data_in = 0;
+#1 enable = 0;
+#1 $finish();
+end
+endmodule
+
+Output :
+TIME = 0 ENABLE = x DATA : x PAD x
+ TIME = 1 ENABLE = 0 DATA : x PAD z
+ TIME = 2 ENABLE = 0 DATA : 1 PAD z
+ TIME = 3 ENABLE = 1 DATA : 1 PAD 1
+ TIME = 4 ENABLE = 1 DATA : 0 PAD 0
+ TIME = 5 ENABLE = 0 DATA : 0 PAD z
+
+Example - Mux
+
+module mux_using_assign();
+reg data_in_0,data_in_1;
+wiredata_out;
+reg sel;
+
+assign data_out = (sel) ? data_in_1 : data_in_0;
+
+initial begin
+
+$monitor("time = %g sel = %b data0 = %b data1 = %b out = %b",$time,sel,data_in_0,data_in_1,data_out);
+data_in_0 = 0;
+data_in_1 = 0;
+sel = 0;
+#10 sel = 1;
+#10 $finish();
+end
+
+always
+#1 data_in_0 = ~data_in_0;
+
+always #2 data_in_1 = ~data_in_1;
+
+endmodule
+
+Output :
+
+TIME = 0 SEL = 0 DATA0 = 0 DATA1 = 0 OUT = 0
+ TIME = 1 SEL = 0 DATA0 = 1 DATA1 = 0 OUT = 1
+ TIME = 2 SEL = 0 DATA0 = 0 DATA1 = 1 OUT = 0
+ TIME = 3 SEL = 0 DATA0 = 1 DATA1 = 1 OUT = 1
+ TIME = 4 SEL = 0 DATA0 = 0 DATA1 = 0 OUT = 0
+ TIME = 5 SEL = 0 DATA0 = 1 DATA1 = 0 OUT = 1
+ TIME = 6 SEL = 0 DATA0 = 0 DATA1 = 1 OUT = 0
+ TIME = 7 SEL = 0 DATA0 = 1 DATA1 = 1 OUT = 1
+ TIME = 8 SEL = 0 DATA0 = 0 DATA1 = 0 OUT = 0
+ TIME = 9 SEL = 0 DATA0 = 1 DATA1 = 0 OUT = 1
+ TIME = 10 SEL = 1 DATA0 = 0 DATA1 = 1 OUT = 1
+ TIME = 11 SEL = 1 DATA0 = 1 DATA1 = 1 OUT = 1
+ TIME = 12 SEL = 1 DATA0 = 0 DATA1 = 0 OUT = 0
+ TIME = 13 SEL = 1 DATA0 = 1 DATA1 = 0 OUT = 0
+ TIME = 14 SEL = 1 DATA0 = 0 DATA1 = 1 OUT = 1
+ TIME = 15 SEL = 1 DATA0 = 1 DATA1 = 1 OUT = 1
+ TIME = 16 SEL = 1 DATA0 = 0 DATA1 = 0 OUT = 0
+ TIME = 17 SEL = 1 DATA0 = 1 DATA1 = 0 OUT = 0
+ TIME = 18 SEL = 1 DATA0 = 0 DATA1 = 1 OUT = 1
+ TIME = 19 SEL = 1 DATA0 = 1 DATA1 = 1 OUT = 1
+
+
