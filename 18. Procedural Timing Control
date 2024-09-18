@@ -1,0 +1,59 @@
+Procedural blocks and timing controls :
+
+Delay controls.
+Edge-Sensitive Event controls.
+Level-Sensitive Event controls-Wait statements.
+Named Events.
+
+Delay Controls :
+
+Delays the execution of a procedural statement by specific simulation time.
+
+#< time > < statement >;
+
+ 	 	
+Example - clk_gen :
+
+module clk_gen();
+reg clk,rst;
+
+initial begin
+$monitor(" Time = %g reset = %b clk = %b",$time,clk,rst);
+
+clk = 0;
+rst = 0;
+#2 rst = 1;
+#5 rst = 0;
+#10 $finish();
+end
+
+always #1 clk = !clk;
+
+endmodule
+
+Output :
+
+ Time = 0 reset = 0 clk = 0
+ Time = 1 reset = 0 clk = 1
+ Time = 2 reset = 1 clk = 0
+ Time = 3 reset = 1 clk = 1
+ Time = 4 reset = 1 clk = 0
+ Time = 5 reset = 1 clk = 1
+ Time = 6 reset = 1 clk = 0
+ Time = 7 reset = 0 clk = 1
+ Time = 8 reset = 0 clk = 0
+ Time = 9 reset = 0 clk = 1
+ Time = 10 reset = 0 clk = 0
+ Time = 11 reset = 0 clk = 1
+ Time = 12 reset = 0 clk = 0
+ Time = 13 reset = 0 clk = 1
+ Time = 14 reset = 0 clk = 0
+ Time = 15 reset = 0 clk = 1
+ Time = 16 reset = 0 clk = 0
+
+Edge sensitive Event Controls : 
+
+Delays execution of the next statement until the specified transition on a signal.
+
+syntax : @ (< posedge >|< negedge > signal) < statement >;
+
