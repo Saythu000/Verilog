@@ -1,1 +1,220 @@
+Task :	
+Tasks are used in all programming languages, generally known as procedures or subroutines. The lines of code are enclosed in task....end task brackets. Data is passed to the task, the processing done, and the result returned. They have to be specifically called, with data ins and outs, rather than just wired in to the general netlist. Included in the main body of code, they can be called many times, reducing code repetition.
 
+tasks are defined in the module in which they are used. It is possible to define a task in a separate file and use the compile directive 'include to include the task in the file which instantiates the task.
+tasks can include timing delays, like posedge, negedge, # delay and wait.
+tasks can have any number of inputs and outputs.
+The variables declared within the task are local to that task. The order of declaration within the task defines how the variables passed to the task by the caller are used.
+tasks can take, drive and source global variables, when no local variables are used. When local variables are used, basically output is assigned only at the end of task execution.
+tasks can call another task or function.
+tasks can be used for modeling both combinational and sequential logic.
+A task must be specifically called with a statement, it cannot be used within an expression as a function can.
+
+Syntax :
+A task begins with keyword task and ends with keyword endtask
+Inputs and outputs are declared after the keyword task.
+Local variables are declared after input and output declaration.
+
+Example - Simple Task
+module simple_task();
+
+task convert;
+input [7:0] temp_in;
+output [7:0] temp_out;
+begin
+  temp_out = (9/5) *( temp_in + 32)
+end
+endtask
+
+endmodule
+
+
+Example - Task using Global Variables
+module task_global();
+
+reg [7:0] temp_out;
+reg [7:0] temp_in;
+
+task convert;
+begin
+  temp_out = (9/5) *( temp_in + 32);
+end
+endtask
+
+endmodule
+
+Calling a Task:
+	
+Let's assume that the task in example 1 is stored in a file called mytask.v. Advantage of coding a task in a separate file, is that it can be used in multiple modules.
+
+module  task_calling (temp_a, temp_b, temp_c, temp_d);
+input [7:0] temp_a, temp_c;
+output [7:0] temp_b, temp_d;
+reg [7:0] temp_b, temp_d;
+`include "mytask.v"
+  	 
+always @ (temp_a)
+begin	
+  convert (temp_a, temp_b);
+end  
+
+always @ (temp_c)
+begin	
+  convert (temp_c, temp_d);
+end  
+  	 
+endmodule
+
+
+Example - CPU Write / Read Task :
+	
+Below is the waveform used for writing into memory and reading from memory. We make the assumption that there is a need to use this interface from multiple agents. So we write the read/write as tasks.
+
+module bus_wr_rd_task();
+
+reg clk,rd,wr,ce;
+reg [7:0] addr,data_wr,data_rd;
+reg [7:0] read_data;
+
+initial begin
+ clk = 0;
+read_data = 0;
+rd = 0;
+wr = 0;
+ce = 0;
+addr = 0;
+data_wr = 0;
+data_rd = 0;
+
+#1 cpu_write(8'h11,8'hAA);
+#1 cpu_read(8'h11,read_data);
+#1 cpu_write(8'h12,8'hAB);
+#1 cpu_read(8'h12,read_data);
+#1 cpu_write(8'h13,8'h0A);
+#1 cpu_read(8'h13,read_data);
+#100 $finish();
+end
+always #1 clk = ~clk;
+//CPU Read Task
+task cpu_read;
+input [7:0] address;
+output [7:0] data;
+begin
+$display ("%g CPU Read  task with address : %h", $time, address);
+$display ("%g  -> Driving CE, RD and ADDRESS on to bus", $time);
+@(posedge clk);
+addr = address;
+ce = 1;
+rd = 1;
+@(negedge clk);
+data = data_rd;
+@(posedge clk);
+addr = 0;
+ce = 0;
+rd = 0;
+$display ("%g CPU Read  data              : %h", $time, data);
+ $display ("======================");
+end
+endtask
+
+//CU Write Task
+task cpu_write;
+  input [7:0]  address;
+  input [7:0] data;
+  begin
+    $display ("%g CPU Write task with address : %h Data : %h", 
+      $time, address,data);
+    $display ("%g  -> Driving CE, WR, WR data and ADDRESS on to bus", 
+      $time);
+    @ (posedge clk);
+    addr = address;
+    ce = 1;
+    wr = 1;
+    data_wr = data;
+    @ (posedge clk);
+    addr = 0;
+    ce = 0;
+    wr = 0;
+    $display ("======================");
+  end
+endtask
+
+// Memory model for checking tasks
+reg [7:0] mem [0:255];
+
+always @ (addr or ce or rd or wr or data_wr)
+if (ce) begin
+  if (wr) begin
+    mem[addr] = data_wr;
+  end
+  if (rd) begin
+    data_rd = mem[addr];
+  end
+end
+
+endmodule
+
+Output :
+	
+ 1 CPU Write task with address : 11 Data : aa
+ 1  -> Driving CE, WR, WR data and ADDRESS on to bus
+ ======================
+ 4 CPU Read  task with address : 11
+ 4  -> Driving CE, RD and ADDRESS on to bus
+ 7 CPU Read  data              : aa
+ ======================
+ 8 CPU Write task with address : 12 Data : ab
+ 8  -> Driving CE, WR, WR data and ADDRESS on to bus
+ ======================
+ 12 CPU Read  task with address : 12
+ 12  -> Driving CE, RD and ADDRESS on to bus
+ 15 CPU Read  data              : ab
+ ======================
+ 16 CPU Write task with address : 13 Data : 0a
+ 16  -> Driving CE, WR, WR data and ADDRESS on to bus
+ ======================
+ 20 CPU Read  task with address : 13
+ 20  -> Driving CE, RD and ADDRESS on to bus
+ 23 CPU Read  data              : 0a
+ ======================
+
+
+	Function :
+	
+A Verilog HDL function is the same as a task, with very little differences, like function cannot drive more than one output, can not contain delays.
+
+functions are defined in the module in which they are used. It is possible to define functions in separate files and use compile directive 'include to include the function in the file which instantiates the task.
+functions can not include timing delays, like posedge, negedge, # delay, which means that functions should be executed in "zero" time delay.
+functions can have any number of inputs but only one output.
+The variables declared within the function are local to that function. The order of declaration within the function defines how the variables passed to the function by the caller are used.
+functions can take, drive, and source global variables, when no local variables are used. When local variables are used, basically output is assigned only at the end of function execution.
+functions can be used for modeling combinational logic.
+functions can call other functions, but can not call tasks
+
+Syntax:
+A function begins with keyword function and ends with keyword endfunction
+inputs are declared after the keyword function.
+
+Example :
+Simple Function
+
+module simple_function();
+function myfunction;
+input a,b,c,d;
+begin
+myfunction = ((a+b) +(c-d));
+end
+endfunction
+
+endmodule
+
+Example - Calling a Function
+
+module function_calling(a,b,c,d,e,f);
+inputa,b,c,d,e;
+output f;
+wire f;
+`include "myfunction.v"
+assign f = (myfunction(a,b,c,d)) ? e : 0;
+
+endmodule
