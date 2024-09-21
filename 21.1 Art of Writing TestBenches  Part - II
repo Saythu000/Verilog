@@ -1,0 +1,93 @@
+Writing a TestBench :
+First step of any testbench creation is building a dummy template which basically declares inputs to DUT as reg and outputs from DUT as wire, then instantiates the DUT as shown in the code below. Note that there is no port list for the test bench.
+
+	Test Bench :
+
+ module tb();
+ reg clk,rst,enable;
+ wire [7:0] count;
+
+ counter dut(.clk(clk),.rst(rst),.enable(enable),.count(count));
+endmodule
+
+Next step would be to add clock generator logic: this is straight forward, as we know how to generate a clock. Before we add a clock generator we need to drive all the inputs to DUT to some known state as shown in the code below.
+
+ module tb();
+ reg clk,rst,enable;
+ wire [7:0] count;
+
+ counter dut(.clk(clk),.rst(rst),.enable(enable),.count(count));
+ 
+ always #5 clk = !clk;
+
+ initial begin
+ clk = 0;
+ rst = 0;
+ enable = 0;
+ end
+endmodule
+
+An initial block in Verilog is executed only once, thus simulator sets the value of clk, reset and enable to 0; by looking at the counter code (of course you will be referring to the DUT specs) could be found that driving 0 makes all these signals disabled.
+
+There are many ways to generate a clock: one could use a forever loop inside an initial block as an alternative to the above code. You could a add parameter or use `define to control the clock frequency. You may write a complex clock generator, where we could introduce PPM (Parts per million, clock width drift), then control the duty cycle. All the above depends on the specs of the DUT and the creativity of a "Test Bench Designer".
+
+At this point, you would like to test if the testbench is generating the clock correctly: well you can compile it with any Verilog simulator.
+
+Of course it is a very good idea to keep file names the same as the module name. Ok, coming back to compiling, you will see that the simulator does print anything on screen, or dump any waveform. Thus we need to add support for all the above as shown in the code below.
+
+Test Bench continues :
+ module tb();
+ reg clk,rst,enable;
+ wire [7:0] count;
+
+ counter dut(.clk(clk),.rst(rst),.enable(enable),.count(count));
+ 
+ always #5 clk = !clk;
+
+ initial begin
+ clk = 0;
+ rst = 0;
+ enable = 0;
+ end
+
+ initial begin
+ $display("\t\ttime,\tclk,\treset,\tenable,\tcount");
+ $monitor("%d,\t%b,\t%b,\t%b,\t%d",$time, clk,rst,enable,count);
+ end
+
+ initial
+ #100 $finish();
+
+endmodule
+
+	
+$dumpfile is used for specifying the file that the simulator will use to store the waveform, that can be used later using a waveform viewer. (Please refer to the tools section for freeware versions of viewers.) $dumpvars basically instructs the Verilog compiler to start dumping all the signals to "counter.vcd".
+	
+$display is used for printing text or variables to stdout (screen), \t is for inserting tabs. The syntax is the same as for printf C language. $monitor in the second line is a bit different: $monitor keeps track of changes to the variables that are in the list (clk, reset, enable, count). Whenever any of them changes, it prints their value, in the respective radix specified.
+
+$finish is used for terminating the simulation after #100 time units (note: all the initial, always blocks start execution at time 0).
+
+Now that we have written the basic skeleton, let's compile and see what we have just coded. Output of the simulator is shown below.
+
+Output :
+   time 	clk, 	reset, 	enable, count
+     0, 		0, 	0, 	0, 	x
+     5, 		1, 	0, 	0, 	x
+     10, 	0, 	0, 	0, 	x
+     15, 	1, 	0, 	0, 	x
+     20, 	0, 	0, 	0, 	x
+     25, 	1, 	0, 	0, 	x
+     30, 	0, 	0, 	0, 	x
+     35, 	1, 	0, 	0, 	x
+     40, 	0, 	0, 	0, 	x
+     45, 	1, 	0, 	0, 	x
+     50, 	0, 	0, 	0, 	x
+     55, 	1, 	0, 	0, 	x
+     60, 	0, 	0, 	0, 	x
+     65, 	1, 	0, 	0, 	x
+     70, 	0, 	0, 	0, 	x
+     75, 	1, 	0, 	0, 	x
+     80, 	0, 	0, 	0, 	x
+     85, 	1, 	0, 	0, 	x
+     90, 	0, 	0, 	0, 	x
+     95, 	1, 	0, 	0, 	x
