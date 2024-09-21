@@ -1,0 +1,41 @@
+Introduction :
+There are tasks and functions that are used to generate input and output during simulation. Their names begin with a dollar sign ($). The synthesis tools parse and ignore system functions, and hence can be included even in synthesizable models.
+
+$display, $strobe, $monitor :
+
+These commands have the same syntax, and display text on the screen during simulation. They are much less convenient than waveform display tools like GTKWave. or Undertow or Debussy. $display and $strobe display once every time they are executed, whereas $monitor displays every time one of its parameters changes. The difference between $display and $strobe is that $strobe displays the parameters at the very end of the current simulation time unit rather than exactly when it is executed. The format string is like that in C/C++, and may contain format characters. Format characters include %d (decimal), %h (hexadecimal), %b (binary), %c (character), %s (string) and %t (time), %m (hierarchy level). %5d, %5b etc. would give exactly 5 spaces for the number instead of the space needed. Append b, h, o to the task name to change default format to binary, octal or hexadecimal.
+
+	Syntax :
+ $display ("format_string", par_1, par_2, ... );
+$strobe ("format_string", par_1, par_2, ... );
+$monitor ("format_string", par_1, par_2, ... );
+$displayb (as above but defaults to binary..);
+$strobeh (as above but defaults to hex..);
+$monitoro (as above but defaults to octal..);
+
+$time, $stime, $realtime :
+These return the current simulation time as a 64-bit integer, a 32-bit integer, and a real number, respectively.
+
+$reset, $stop, $finish :
+$reset resets the simulation back to time 0; $stop halts the simulator and puts it in interactive mode where the user can enter commands; $finish exits the simulator back to the operating system.
+
+$scope, $showscope :
+$scope(hierarchy_name) sets the current hierarchical scope to hierarchy_name. $showscopes(n) lists all modules, tasks and block names in (and below, if n is set to 1) the current scope.
+
+$random :
+$random generates a random integer every time it is called. If the sequence is to be repeatable, the first time one invokes random giving it a numerical argument (a seed). Otherwise the seed is derived from the computer clock.
+
+$dumpfile, $dumpvar, $dumpon, $dumpoff, $dumpall :
+These can dump variable changes to a simulation viewer like Debussy. The dump files are capable of dumping all the variables in a simulation. This is convenient for debugging, but can be very slow.
+
+Syntax:
+$dumpfile("filename.vcd")
+$dumpvar dumps all variables in the design.
+$dumpvar(1, top) dumps all the variables in module top and below, but not modules instantiated in top.
+$dumpvar(2, top) dumps all the variables in module top and 1 level below.
+$dumpvar(n, top) dumps all the variables in module top and n-1 levels below.
+$dumpvar(0, top) dumps all the variables in module top and all level below.
+$dumpon initiates the dump.
+$dumpoff stop dumping.
+
+
