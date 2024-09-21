@@ -1,0 +1,42 @@
+	Introduction :
+ Writing a testbench is as complex as writing the RTL code itself. These days ASICs are getting more and more complex and thus verifying these complex ASIC has become a challenge. Typically 60-70% of time needed for any ASIC is spent on verification/validation/testing. Even though the above facts are well known to most ASIC engineers, still engineers think that there is no glory in verification.
+
+I have picked up some examples from the VLSI classes that I used to teach during 1999-2001, when I was in Chennai. Please feel free to give your feedback on how to improve the tutorial below.
+
+Before you Start :
+For writing testbenches it is important to have the design specification of "design under test" or simply DUT. Specs need to be understood clearly and a test plan, which basically documents the test bench architecture and the test scenarios (test cases) in detail, needs to be made.
+
+Example - Counter :
+	
+Let's assume that we have to verify a simple 4-bit up counter, which increments its count whenever enable is high, and resets to zero when reset is asserted high. Reset is synchronous to clock.
+
+Code for Counter :
+module counter_4bit(clk,rst,enable,count);
+input clk,rst,enable;
+output [7:0] count;
+reg [7:0] count;
+
+always @(posedge clk)
+begin
+if(rst == 1'b1)
+begin
+count <= 0;
+end
+else if(enable == 1'b1)
+begin
+count <= count + 1;
+end
+end
+endmodule
+
+Test Plan :
+	
+We will write a self-checking test bench, but we will do this in steps to help you understand the concept of writing automated test benches.
+DUT is instantiated in the testbench, and the testbench will contain a clock generator, reset generator, enable logic generator and compare logic, which basically calculates the expected count value of counter and compares it with the output of counter.
+
+Test Cases :
+Reset Test : We can start with reset de-asserted, followed by asserting reset for few clock ticks and deasserting the reset, See if counter sets its output to zero.
+Enable Test : Assert/deassert enable after reset is applied.
+Random Assert/deassert of enable and reset.
+
+We can add some more test cases; but we are not here to test the counter, rather to learn how to write test benches.
