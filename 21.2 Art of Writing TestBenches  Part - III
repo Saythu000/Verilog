@@ -1,0 +1,7 @@
+Adding Reset Logic :
+Once we have the basic logic to allow us to see what our testbench is doing, we can next add the reset logic. If we look at the testcases, we see that we had added a constraint that it should be possible to activate reset anytime during simulation. To achieve this we have many approaches, but I am going to teach something that will go long way. There is something called 'events' in Verilog: events can be triggered, and also monitored, to see if an event has occurred.
+
+	
+Let's code our reset logic in such a way that it waits for the trigger event "reset_trigger": when this event happens, reset logic asserts reset at negative edge of clock and de-asserts on next negative edge as shown in the code below. Also after de-asserting the reset, reset logic triggers another event called "reset_done_trigger". This trigger event can then be used somewhere else in the testbench to sync up.
+
+Code of reset logic :
