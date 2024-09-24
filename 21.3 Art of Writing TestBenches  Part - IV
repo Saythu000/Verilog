@@ -1,0 +1,156 @@
+Adding compare Logic :
+	
+To make any testbench self checking/automated, first we need to develop a model that mimics the DUT in functionality. In our example, it's going to be very easy, but at times if the DUT is complex, then to mimic it will be very complex and will require a lot of innovative techniques to make self-checking work.
+
+reg [3:0] count_compare; 
+
+always @ (posedge clk) 
+if (reset == 1'b1) begin
+  count_compare <= 0; 
+end else if ( enable == 1'b1) begin
+  count_compare <= count_compare + 1; 
+end
+	
+Once we have the logic to mimic the DUT functionality, we need to add the checker logic, which at any given point keeps checking the expected value with the actual value. Whenever there is any error, it prints out the expected and actual value, and also terminates the simulation by triggering the event "terminate_sim".
+
+always @ (posedge clk) 
+  if (count_compare != count) begin 
+    $display ("DUT Error at time %d", $time); 
+    $display (" Expected value %d, Got Value %d", count_compare, count); 
+    #5 -> terminate_sim; 
+  end 
+Now that we have the all the logic in place, we can remove $display and $monitor, as our testbench have become fully automatic, and we don't require to manually verify the DUT input and output. Try changing the count_compare = count_compare +2, and see how compare logic works. This is just another way to see if our testbench is stable.
+
+We could add some fancy printing as shown in the figure below to make our test environment more friendly.
+
+Output :
+Compiler version U-2023.03-SP2_Full64; Runtime version U-2023.03-SP2_Full64;  Sep 24 10:05 2024
+###################################################
+Applying reset
+Came out of Reset
+Terminating simulation
+Simulation Result : PASSED
+###################################################
+$finish called from file "testbench.sv", line 48.
+$finish at simulation time                   96
+
+Design :
+module counter (clk, reset, enable, count);
+input clk, reset, enable;
+output [3:0] count;
+reg [3:0] count;                                   
+
+always @ (posedge clk)
+if (reset == 1'b1) begin
+  count <= 0;
+end else if ( enable == 1'b1) begin
+  count <= count + 1;
+end
+
+endmodule 
+
+
+
+
+Test Bench :
+module counter_tb;
+
+reg clk, reset, enable;
+wire [3:0] count;
+reg dut_error;
+
+counter U0 (
+.clk    (clk),
+.reset  (reset),
+.enable (enable),
+.count  (count)
+);
+
+event reset_enable;
+event terminate_sim;
+
+initial
+begin
+ $display ("###################################################");
+ clk = 0;
+ reset = 0;
+ enable = 0;
+ dut_error = 0;
+end
+
+always
+  #5 clk = !clk;
+
+initial 
+begin
+  $dumpfile ("counter.vcd");
+  $dumpvars;
+end
+
+
+initial
+@ (terminate_sim)  begin
+ $display ("Terminating simulation");
+ if (dut_error == 0) begin
+   $display ("Simulation Result : PASSED");
+ end
+ else begin
+   $display ("Simulation Result : FAILED");
+ end
+ $display ("###################################################");
+ #1 $finish;
+end
+
+
+
+event reset_done;
+
+initial
+forever begin
+ @ (reset_enable);
+ @ (negedge clk)
+ $display ("Applying reset");
+   reset = 1;
+ @ (negedge clk)
+   reset = 0;
+ $display ("Came out of Reset");
+ -> reset_done;
+end
+
+initial begin
+  #10 -> reset_enable;
+  @ (reset_done);
+  @ (negedge clk);
+  enable = 1;
+  repeat (5)
+  begin
+   @ (negedge clk);
+  end
+  enable = 0;
+  #5 -> terminate_sim;
+end
+
+
+reg [3:0] count_compare;
+
+always @ (posedge clk)
+if (reset == 1'b1)
+ count_compare <= 0;
+else if ( enable == 1'b1)
+ count_compare <= count_compare + 1;
+
+
+
+always @ (negedge clk)
+if (count_compare != count) begin
+  $display ("DUT ERROR AT TIME%d",$time);
+  $display ("Expected value %d, Got Value %d", count_compare, count);
+  dut_error = 1;
+  #5 -> terminate_sim;
+end
+
+endmodule
+
+	
+There are a lot of things that I have not covered; maybe when I find time, I may add some more details on this subject.
+As to books, I am yet to find a good book on writing test benches.
