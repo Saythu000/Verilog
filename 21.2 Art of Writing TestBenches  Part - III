@@ -5,3 +5,102 @@ Once we have the basic logic to allow us to see what our testbench is doing, we 
 Let's code our reset logic in such a way that it waits for the trigger event "reset_trigger": when this event happens, reset logic asserts reset at negative edge of clock and de-asserts on next negative edge as shown in the code below. Also after de-asserting the reset, reset logic triggers another event called "reset_done_trigger". This trigger event can then be used somewhere else in the testbench to sync up.
 
 Code of reset logic :
+
+event reset_trigger; 
+  event  reset_done_trigger; 
+    
+  initial begin 
+    forever begin 
+      @ (reset_trigger); 
+      @ (negedge clk); 
+      reset = 1; 
+      @ (negedge clk); 
+      reset = 0; 
+      -> reset_done_trigger; 
+    end 
+  end
+
+
+Adding test case logic :
+	
+Moving forward, let's add logic to generate the test cases, ok we have three testcases as in the first part of this tutorial. Let's list them again. 
+
+Reset Test : We can start with reset de-asserted, followed by asserting reset for few clock ticks and de-asserting the reset, See if counter sets its output to zero.
+Enable Test : Assert/de-assert enable after reset is applied.
+Random Assert/de-assert of enable and reset.
+
+	
+Repeating it again: "There are many ways" to code a test case, it all depends on the creativity of the Test bench designer. Let's take a simple approach and then slowly build upon it.
+
+Test Case 1 - Asserting/ De-asserting reset :
+
+In this test case, we will just trigger the event reset_trigger after 10 simulation units.
+
+initial
+    begin :Test case
+    #10 ->reset_trigger;
+    end
+
+Test Case 2 - Assert/ De-assert enable after reset is applied:
+	
+In this test case, we will trigger the reset logic and wait for the reset logic to complete its operation, before we start driving the enable signal to logic 1.
+
+initial 
+  begin : Test case
+  #10 ->reset_trigger;
+@(reset_done_trigger);
+@(negedge clk);
+enable = 1;
+repeat(10) begin
+@(negedge clk)
+end
+enable = 0;
+end
+
+Test Case 3 - Assert/De-assert enable and reset randomly:
+	
+In this testcase we assert the reset, and then randomly drive values on to enable and reset signal.
+
+initial
+ begin
+#10 ->reset_trigger;
+@(reset_done_trigger);
+fork
+repeat(10) begin
+@(negedge clk);
+enable = $random;
+end
+repeat(10) begin
+@(negedge clk);
+reset = $random;
+end
+join
+end
+
+	
+Well you might ask, do all this three test case exist in same file? Well, the answer is no. If we try to have all three test cases on one file, then we end up having race conditions due to three initial blocks driving reset and enable signal. So normally, once test bench coding is done, test cases are coded separately and included in testbench with `include directives as shown below. (There are better ways to do this, but you have to think how you want to do it).
+	
+If you look closely at all the three test cases, you will find that even though test case execution is not complete, simulation terminates. To have better control, what we can do is adding an event like "terminate_sim" and execute $finish only when this event is triggered. We can trigger this event at the end of test case execution. The code for $finish now could look as shown below.
+
+event terminate_sim;
+initial begin
+@(terminate_sim);
+#5 $finish();
+end
+
+The modified test case #2 would be like :
+
+initial begin
+#10 -> reset_trigger;
+@(reset_done_trigger);
+@(negedge clk);
+enable = 1;
+repeat (10) begin
+@(negedge clk);
+end
+enable = 0;
+@(terminate_sim);
+end
+
+Second problem with the approach that we have taken till now is that we need to manually check the waveform and also the simulator output on the screen to see if the DUT is working correctly. Part IV shows how to automate this.
+
