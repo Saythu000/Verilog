@@ -1,0 +1,15 @@
+Introduction to FSM :
+	
+State machines or FSM are the heart of any digital design; of course a counter is a simple form of FSM. When I was learning Verilog, I used to wonder "How do I code FSM in Verilog" and "What is the best way to code it". I will try to answer the first part of the question below and second part of the question can be found in the tidbits section.
+
+State machine Types :
+	
+There are two types of state machines as classified by the types of outputs generated from each. The first is the Moore State Machine where the outputs are only a function of the present state, the second is the Mealy State Machine where one or more of the outputs are a function of the present state and one or more of the inputs.
+
+State machines can also be classified according to the state encoding used. Encoding style is also a critical factor which decides speed and gate complexity of the FSM. Binary, gray, one hot, one cold, and almost one hot are the different types of encoding styles used in coding FSM states.
+
+Modeling State machines:
+	
+One thing that need to be kept in mind when coding FSM is that combinational logic and sequence logic should be in two different always blocks. In the above two figures, next state logic is always the combinational logic. State Registers and Output logic are sequential logic. It is very important that any asynchronous signal to the next state logic be synchronized before being fed to the FSM. Always try to keep FSM in a separate Verilog file.
+	
+Using constants declaration like parameter or `define to define states of the FSM makes code more readable and easy to manage.
