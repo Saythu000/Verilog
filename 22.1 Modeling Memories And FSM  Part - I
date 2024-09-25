@@ -1,0 +1,59 @@
+Memory Modeling :
+To help modeling of memory, Verilog provides support for two dimensions arrays. Behavioral models of memories are modeled by declaring an array of register variables; any word in the array may be accessed using an index into the array. A temporary variable is required to access a discrete bit within the array.
+
+Syntax :
+reg [wordsize:0] array_name [0:arraysize];
+
+	Examples :
+ Declaration :	
+reg [7:0] my_memory [0:255];
+	
+Here [7:0] is the memory width and [0:255] is the memory depth with the following parameters:
+Width : 8 bits, little endian
+Depth : 256, address 0 corresponds to location 0 in the array.
+
+Storing Values :
+my_memory[address] = data_in;
+
+Reading Values :
+data_out = my_memory[address];
+
+Bit Read :
+Sometimes there may be need to read just one bit. Unfortunately Verilog does not allow to read or write only one bit: the workaround for such a problem is as shown below.
+	
+data_out = my_memory[address];
+	
+data_out_it_0 = data_out[0];
+
+	Initializing Memories :
+ 	
+A memory array may be initialized by reading memory pattern file from disk and storing it on the memory array. To do this, we use system tasks $readmemb and $readmemh. $readmemb is used for binary representation of memory content and $readmemh for hex representation.
+
+Syntax :
+	
+$readmemh("file_name",mem_array,start_addr,stop_addr);
+
+Note : start_addr and stop_addr are optional.
+
+	Example - Simple memory
+ module memory();
+ reg[7:0] mem [0:255];
+
+ initial begin
+ $readmemh("memory.list",mem);
+ end
+ endmodule
+
+ 	Example - Memory.list file
+  //Comments are allowed 
+1100_1100   // This is first address i.e 8'h00
+1010_1010   // This is second address i.e 8'h01
+@ 55        // Jump to new address 8'h55
+0101_1010   // This is address 8'h55
+0110_1001   // This is address 8'h56
+
+	
+$readmemh system task can also be used for reading testbench vectors. I will cover this in detail in the test bench section ... when I find time.
+	
+Please take a look at the examples section for more details on different types of memories.
+
